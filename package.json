@@ -10,7 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^0.18.0",
-    "git-client": "file:/Users/chris/Repositories/git-client",
+    "git-client": "file:../git-client",
     "winston": "^2.4.1"
   }
 }
