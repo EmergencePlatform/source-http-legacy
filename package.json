@@ -11,6 +11,8 @@
   "dependencies": {
     "axios": "^0.18.0",
     "git-client": "file:../git-client",
-    "winston": "^2.4.1"
+    "inquirer": "^5.2.0",
+    "winston": "^2.4.1",
+    "yargs": "^11.0.0"
   }
 }
