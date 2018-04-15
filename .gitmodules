@@ -1,0 +1,3 @@
+[submodule "git-client"]
+	path = node_modules/git-client
+	url = /Users/chris/Repositories/git-client

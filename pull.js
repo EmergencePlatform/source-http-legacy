@@ -7,20 +7,11 @@ if (process.env.DEBUG) {
 }
 
 
-// setup habitat
-const git = require('./lib/git.js');
-const gitRequired = '>=2.7.4';
+// pull up in async context
+pull().catch(err => logger.error('Failed to start tool:', err.message));
 
-
-// start up in async context
-start().catch(err => logger.error('Failed to start tool:', err.message));
-
-
-async function start () {
-    // check git version
-    if (!await git.satisfiesVersion(gitRequired)) {
-        throw new Error(`Git version must be ${gitRequired}, reported version is ${await git.getVersion()}`);
-    }
+async function pull () {
+    const git = await require('git-client').requireVersion('>=2.7.4');
 
     let status = await git.status({ help: true });
 
