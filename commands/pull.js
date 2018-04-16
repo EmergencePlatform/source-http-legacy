@@ -30,6 +30,7 @@ exports.handler = async argv => {
 
 
 async function pull(options) {
+    const path = require('path');
     const hostApi = await require('../lib/host.js').getApi(options);
     const git = await require('git-client').requireVersion('>=2.7.4');
 
@@ -49,11 +50,28 @@ async function pull(options) {
     const treePaths = Object.keys(treeFiles).sort();
 
 
+    // organize paths into nested tree
+    const tree = {};
+
+    for (const treePath of treePaths) {
+        let pathPart, pathParts = treePath.split('/');
+        let parentNode = tree;
+
+        while (pathPart = pathParts.shift()) {
+            if (pathParts.length) {
+                parentNode = parentNode[pathPart] || (parentNode[pathPart] = {});
+            } else {
+                parentNode[pathPart] = treeFiles[treePath].SHA1;
+            }
+        }
+    }
+
+
     // build manifest
     // const manifestWriter = await git.hashObject({  w: true, stdin: true, $spawn: true });
 
-    // for (const path of treePaths) {
-    //     manifestWriter.stdin.write(treeFiles[path].SHA1 + ' ' + path + '\n');
+    // for (const treePath of treePaths) {
+    //     manifestWriter.stdin.write(treeFiles[treePath].SHA1 + ' ' + treePath + '\n');
     // }
 
     // manifestWriter.stdin.end();
@@ -64,21 +82,21 @@ async function pull(options) {
 
     // download all files to git // TODO: allow X to run in parallel if hash-object is cool with that?
     for (let i = 0, treeLength = treePaths.length; i < treeLength; i++) {
-        const path = treePaths[i];
-        const rawHash = treeFiles[path].SHA1;
+        const treePath = treePaths[i];
+        const rawHash = treeFiles[treePath].SHA1;
         const blobRef = `refs/sha1-blobs/${rawHash.substr(0, 2)}/${rawHash.substr(2)}`;
 
         let gitHash;
 
         try {
             gitHash = await git.showRef({ hash: true, verify: true }, blobRef);
-            logger.info('(%s/%s) Existing blob %s for %s', i+1, treeLength, gitHash, path);
+            logger.info('(%s/%s) Existing blob %s for %s', i+1, treeLength, gitHash, treePath);
         } catch (err) {
-            logger.info('(%s/%s) Downloading %s', i+1, treeLength, path);
+            logger.info('(%s/%s) Downloading %s', i+1, treeLength, treePath);
 
             // create git writer and host reader
             const writer = await git.hashObject({  w: true, stdin: true, $spawn: true });
-            const response = await hostApi.get(`/emergence/${path}`, { responseType: 'stream' });
+            const response = await hostApi.get(`/emergence/${treePath}`, { responseType: 'stream' });
 
             // pipe data from HTTP response into git
             response.data.pipe(writer.stdin);
