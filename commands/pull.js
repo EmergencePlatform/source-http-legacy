@@ -51,7 +51,8 @@ async function pull(options) {
 
 
     // organize paths into nested tree
-    const tree = {};
+    function TreeNode() {}
+    const tree = Object.create(TreeNode);
 
     for (const treePath of treePaths) {
         let pathPart, pathParts = treePath.split('/');
@@ -59,12 +60,15 @@ async function pull(options) {
 
         while (pathPart = pathParts.shift()) {
             if (pathParts.length) {
-                parentNode = parentNode[pathPart] || (parentNode[pathPart] = {});
+                parentNode = parentNode[pathPart] || (parentNode[pathPart] = Object.create(TreeNode));
             } else {
-                parentNode[pathPart] = treeFiles[treePath].SHA1;
+                parentNode[pathPart] = treeFiles[treePath];
             }
         }
     }
+
+    // TreeNode.isPrototypeOf(tree['site-root']) // true
+    // TreeNode.isPrototypeOf(tree['site-root']['alerts.php']) // false
 
 
     // build manifest
