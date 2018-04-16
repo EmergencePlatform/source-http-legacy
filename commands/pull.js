@@ -18,31 +18,6 @@ exports.builder = {
 };
 
 exports.handler = async argv => {
-    const prompts = [];
-
-    // prompt interactively for username and/or password if not provided
-    if (!argv.key && !argv.token) {
-        if (!argv.username) {
-            prompts.push({
-                name: 'username',
-                message: 'Developer username'
-            });
-        }
-
-        if (!argv.password) {
-            prompts.push({
-                name: 'password',
-                message: 'Developer password',
-                type: 'password'
-            });
-        }
-
-        if (prompts.length) {
-            Object.assign(argv, await require('inquirer').prompt(prompts));
-        }
-    }
-
-
     // execute command
     try {
         logger.debug('executing pull command', argv);
@@ -56,38 +31,13 @@ exports.handler = async argv => {
 
 
 async function pull(options) {
-    const hostOptions = {
-        baseURL: `http://${options.host}`,
-        validateStatus: status => status == 200 || status == 300
-    };
+    const hostApi = await require('../lib/host.js').getApi(options);
 
-
-    // configure host authentication
-    if (options.token) {
-        hostOptions.headers = {
-            Authorization: 'Token '+options.token
-        };
-    } else if (options.key) {
-        hostOptions.params = {
-            accessKey: options.key
-        };
-    } else if (options.username && options.password) {
-        hostOptions.params = {
-            '_LOGIN[username]': options.username,
-            '_LOGIN[password]': options.password
-        };
-    } else {
-        throw 'Key, token, or username+password must be provided to authenticate with host'
-    }
-
-
-    // configure axios instance
-    const axios = require('axios').create(hostOptions);
-    logger.debug('axios options', hostOptions);
+    logger.debug('got host api:', hostApi);
 
 
     // fetch file tree
-    const treeResponse = await axios.get('/emergence');
+    const treeResponse = await hostApi.get('/emergence/site-root/lib');
     logger.debug('tree response:', JSON.stringify(treeResponse.data, null, 4));
 
 
