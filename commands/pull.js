@@ -32,16 +32,27 @@ exports.handler = async argv => {
 
 async function pull(options) {
     const hostApi = await require('../lib/host.js').getApi(options);
-
-    logger.debug('got host api:', hostApi);
+    const git = await require('git-client').requireVersion('>=2.7.4');
 
 
     // fetch file tree
-    const treeResponse = await hostApi.get('/emergence/site-root/lib');
-    logger.debug('tree response:', JSON.stringify(treeResponse.data, null, 4));
+    const treeResponse = await hostApi.get('/emergence');
+    const treeFiles = treeResponse.data.files;
 
 
-    const git = await require('git-client').requireVersion('>=2.7.4');
+    // build manifest
+    const manifestWriter = await git.hashObject({  w: true, stdin: true, $spawn: true });
+
+    for (const path of Object.keys(treeFiles).sort()) {
+        manifestWriter.stdin.write(treeFiles[path].SHA1 + ' ' + path + '\n');
+    }
+
+    manifestWriter.stdin.end();
+
+    const manifestHash = (await manifestWriter.captureOutput()).trim();
+
+
+    // let status = await git.status({ s: true, b: true });
 
     //let status = await git.status({ help: true });
 
