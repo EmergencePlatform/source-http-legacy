@@ -20,7 +20,6 @@ exports.builder = {
 exports.handler = async argv => {
     // execute command
     try {
-        logger.debug('executing pull command', argv);
         await pull(argv);
     } catch (err) {
         console.error('Failed to pull:', err);
@@ -36,29 +35,66 @@ async function pull(options) {
 
 
     // fetch file tree
-    const treeResponse = await hostApi.get('/emergence');
+    logger.info('Downloading site manifest...');
+
+    let treeResponse;
+    try {
+        treeResponse = await hostApi.get('/emergence');
+    } catch (err) {
+        logger.error('Failed to download manifest, got status %s %s', err.response.status, err.response.statusText);
+        process.exit(2);
+    }
+
     const treeFiles = treeResponse.data.files;
+    const treePaths = Object.keys(treeFiles).sort();
 
 
     // build manifest
-    const manifestWriter = await git.hashObject({  w: true, stdin: true, $spawn: true });
+    // const manifestWriter = await git.hashObject({  w: true, stdin: true, $spawn: true });
 
-    for (const path of Object.keys(treeFiles).sort()) {
-        manifestWriter.stdin.write(treeFiles[path].SHA1 + ' ' + path + '\n');
+    // for (const path of treePaths) {
+    //     manifestWriter.stdin.write(treeFiles[path].SHA1 + ' ' + path + '\n');
+    // }
+
+    // manifestWriter.stdin.end();
+
+    // const manifestHash = (await manifestWriter.captureOutput()).trim();
+
+    // TODO: diff manifest against last manifest and filter identical lines
+
+    // download all files to git // TODO: allow X to run in parallel if hash-object is cool with that?
+    for (let i = 0, treeLength = treePaths.length; i < treeLength; i++) {
+        const path = treePaths[i];
+        const rawHash = treeFiles[path].SHA1;
+        const blobRef = `refs/sha1-blobs/${rawHash.substr(0, 2)}/${rawHash.substr(2)}`;
+
+        let gitHash;
+
+        try {
+            gitHash = await git.showRef({ hash: true, verify: true }, blobRef);
+            logger.info('(%s/%s) Existing blob %s for %s', i+1, treeLength, gitHash, path);
+        } catch (err) {
+            logger.info('(%s/%s) Downloading %s', i+1, treeLength, path);
+
+            // create git writer and host reader
+            const writer = await git.hashObject({  w: true, stdin: true, $spawn: true });
+            const response = await hostApi.get(`/emergence/${path}`, { responseType: 'stream' });
+
+            // pipe data from HTTP response into git
+            response.data.pipe(writer.stdin);
+
+            // wait for data to finish
+            await new Promise((resolve, reject) => {
+                response.data.on('end', () => resolve());
+                response.data.on('error', () => reject());
+            });
+
+            // read written hash and save to ref
+            gitHash = (await writer.captureOutput()).trim();
+
+            // write mapping of emergence raw SHA1 hash to git hash
+            const updateRefOutput = await git.updateRef(blobRef, gitHash);
+        }
     }
 
-    manifestWriter.stdin.end();
-
-    const manifestHash = (await manifestWriter.captureOutput()).trim();
-
-
-    // let status = await git.status({ s: true, b: true });
-
-    //let status = await git.status({ help: true });
-
-    //logger.debug('git status:', status);
-    // logger.info('git status:', await git.status());
-
-    // logger.debug('getGitDirFromEnvironment:', await git.Git.getGitDirFromEnvironment());
-    // logger.debug('getWorkTreeFromEnvironment:', await git.Git.getWorkTreeFromEnvironment());
 };
