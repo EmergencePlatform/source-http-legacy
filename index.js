@@ -9,6 +9,25 @@ if (process.env.DEBUG) {
 
 // route command line
 require('yargs')
+    .option('d', {
+        alias: 'debug',
+        default: false,
+        global: true
+    })
+    .option('q', {
+        alias: 'quiet',
+        default: false,
+        global: true
+    })
+    .check(function(argv) {
+        if (argv.debug) {
+            logger.level = 'debug';
+        } else if (argv.quiet) {
+            logger.level = 'error';
+        }
+
+        return true;
+    })
     .commandDir('commands')
     .demandCommand()
     .strict()
