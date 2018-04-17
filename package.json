@@ -18,5 +18,11 @@
   },
   "bin": {
     "emergence-source-http-legacy": "./bin/cli.js"
-  }
+  },
+  "keywords": [
+    "emergence",
+    "emergence-source",
+    "http",
+    "git"
+  ]
 }
