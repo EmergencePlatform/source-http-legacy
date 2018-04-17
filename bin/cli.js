@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+
+
 // setup logger
 const logger = require('winston');
 module.exports = { logger };
@@ -28,7 +31,7 @@ require('yargs')
 
         return true;
     })
-    .commandDir('commands')
+    .commandDir('../commands')
     .demandCommand()
     .strict()
     .help()

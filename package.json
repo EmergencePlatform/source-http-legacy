@@ -1,8 +1,8 @@
 {
   "name": "@emergence/source-http-legacy",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Emergence source driver for pulling file trees via Emergence sites' legacy HTTP interface",
-  "main": "index.js",
+  "main": "bin/cli.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,5 +14,8 @@
     "inquirer": "^5.2.0",
     "winston": "^2.4.1",
     "yargs": "^11.0.0"
+  },
+  "bin": {
+    "emergence-source-http-legacy": "./bin/cli.js"
   }
 }
