@@ -1,7 +1,8 @@
 {
   "name": "@emergence/source-http-legacy",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Emergence source driver for pulling file trees via Emergence sites' legacy HTTP interface",
+  "repository": "https://github.com/EmergencePlatform/source-http-legacy",
   "main": "bin/cli.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
