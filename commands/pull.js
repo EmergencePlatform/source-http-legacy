@@ -50,45 +50,25 @@ async function pull (options) {
 
 
     // organize paths into nested tree
-    function TreeNode() {}
-    const tree = Object.create(TreeNode);
+    const rootTree = new git.TreeObject();
 
-    for (const treePath of treePaths) {
-        let pathPart, pathParts = treePath.split('/');
-        let parentNode = tree;
-
-        while (pathPart = pathParts.shift()) {
-            if (pathParts.length) {
-                parentNode = parentNode[pathPart] || (parentNode[pathPart] = Object.create(TreeNode));
-            } else {
-                parentNode[pathPart] = treeFiles[treePath];
-            }
-        }
-    }
-
-    // TreeNode.isPrototypeOf(tree['site-root']) // true
-    // TreeNode.isPrototypeOf(tree['site-root']['alerts.php']) // false
-
-
-    // build manifest
-    // const manifestWriter = await git.hashObject({  w: true, stdin: true, $spawn: true });
-
-    // for (const treePath of treePaths) {
-    //     manifestWriter.stdin.write(treeFiles[treePath].SHA1 + ' ' + treePath + '\n');
-    // }
-
-    // manifestWriter.stdin.end();
-
-    // const manifestHash = (await manifestWriter.captureOutput()).trim();
-
-    // TODO: diff manifest against last manifest and filter identical lines
-
-    // download all files to git // TODO: allow X to run in parallel if hash-object is cool with that?
     for (let i = 0, treeLength = treePaths.length; i < treeLength; i++) {
         const treePath = treePaths[i];
+
+
+        // get/build reference to parent in tree hierarchy
+        let pathParts = treePath.split('/');
+        let parentNode = rootTree;
+        let nodeName;
+
+        while ((nodeName = pathParts.shift()) && pathParts.length > 0) {
+            parentNode = parentNode[nodeName] || (parentNode[nodeName] = new git.TreeObject());
+        }
+
+
+        // convert host-provided raw hash to git blob hash, downloading into object store if needed
         const rawHash = treeFiles[treePath].SHA1;
         const blobRef = `refs/sha1-blobs/${rawHash.substr(0, 2)}/${rawHash.substr(2)}`;
-
         let gitHash;
 
         try {
@@ -114,8 +94,37 @@ async function pull (options) {
             gitHash = (await writer.captureOutput()).trim();
 
             // write mapping of emergence raw SHA1 hash to git hash
-            const updateRefOutput = await git.updateRef(blobRef, gitHash);
+            await git.updateRef(blobRef, gitHash);
         }
+
+
+        // store blob in tree
+        parentNode[nodeName] = new git.BlobObject(gitHash);
     }
+
+
+    const rootTreeHash = await git.TreeObject.write(rootTree, git);
+
+    console.log(rootTreeHash);
+
+    // TreeNode.isPrototypeOf(tree['site-root']) // true
+    // TreeNode.isPrototypeOf(tree['site-root']['alerts.php']) // false
+
+
+    // build manifest
+    // const manifestWriter = await git.hashObject({  w: true, stdin: true, $spawn: true });
+
+    // for (const treePath of treePaths) {
+    //     manifestWriter.stdin.write(treeFiles[treePath].SHA1 + ' ' + treePath + '\n');
+    // }
+
+    // manifestWriter.stdin.end();
+
+    // const manifestHash = (await manifestWriter.captureOutput()).trim();
+
+    // TODO: diff manifest against last manifest and filter identical lines
+
+    // download all files to git // TODO: allow X to run in parallel if hash-object is cool with that?
+
 
 };
