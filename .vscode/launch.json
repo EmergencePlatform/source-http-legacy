@@ -7,18 +7,27 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Pull",
             "program": "${workspaceFolder}/index.js",
             "args": [
                 "pull",
-                "b87ef2a5.ngrok.io",
-                // "--token=b35643fa0009d69cd81f8f2b3a89f498"
-                // "--username=chris", "--password=topher"
-                "--key=Nrnt1W9ER1FewOP1"
-            ],
-            "env": {
-                "DEBUG": true
-            }
+
+                // hostname to pull from
+                "exammplesite.ngrok.io",
+
+                // authenticate via emergence inheritence key
+                // "--key=XXXXXXXXXXXXXXXXXXXXX"
+
+                // - OR authenticate via developer session token
+                // "--token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+                // - OR authenticate via developer login
+                "--username=XXXXX",
+                "--password=XXXXX",
+
+                // enable d ebug output
+                "--debug"
+            ]
         }
     ]
 }
