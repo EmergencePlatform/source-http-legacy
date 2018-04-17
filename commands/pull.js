@@ -153,9 +153,3 @@ async function pull (options) {
 
     return rootTreeHash;
 };
-
-
-
-    // TODO: diff manifest against last manifest and filter identical lines
-
-    // download all files to git // TODO: allow X to run in parallel if hash-object is cool with that?
