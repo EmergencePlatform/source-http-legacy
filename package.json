@@ -1,8 +1,8 @@
 {
-  "name": "emergence-exporter",
-  "version": "1.0.0",
-  "description": "Initial tool for converting legacy emergence sites into immutable containers",
-  "main": "pull.js",
+  "name": "emergence-source-http-legacy",
+  "version": "0.9.0",
+  "description": "Emergence source driver for pulling file trees via Emergence sites' legacy HTTP interface",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
