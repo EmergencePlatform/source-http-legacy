@@ -20,7 +20,9 @@ exports.builder = {
 exports.handler = async argv => {
     // execute command
     try {
-        await pull(argv);
+        const hash = await pull(argv);
+        console.log(hash);
+        process.exit(0);
     } catch (err) {
         console.error('Failed to pull:', err);
         process.exit(1);
@@ -32,6 +34,7 @@ exports.handler = async argv => {
 async function pull (options) {
     const hostApi = await require('../lib/host.js').getApi(options);
     const git = await require('git-client').requireVersion('>=2.7.4');
+
 
 
     // fetch file tree
@@ -49,7 +52,42 @@ async function pull (options) {
     const treePaths = Object.keys(treeFiles).sort();
 
 
+
+    // build manifest
+    logger.info ('Hashing manifest...');
+
+    const manifestWriter = await git.hashObject({  w: true, stdin: true, $spawn: true });
+
+    for (const treePath of treePaths) {
+        manifestWriter.stdin.write(treeFiles[treePath].SHA1 + ' ' + treePath + '\n');
+    }
+
+    manifestWriter.stdin.end();
+
+    const manifestHash = await manifestWriter.captureOutputTrimmed();
+
+
+
+    // check if manifest is mapped to a tree already
+    const manifestRef = `refs/sha1-trees/${manifestHash.substr(0, 2)}/${manifestHash.substr(2)}`;
+
+    try {
+        const rootTreeHash = await git.showRef({ hash: true, verify: true }, manifestRef);
+        logger.info('Found existing tree');
+        return rootTreeHash;
+    } catch (err) {
+        // tree not already built for this manifest, continue
+    }
+
+
+
+    // TODO: diff manifests and patch previous tree if available
+
+
+
     // organize paths into nested tree
+    logger.info('Building tree...');
+
     const rootTree = new git.TreeObject();
 
     for (let i = 0, treeLength = treePaths.length; i < treeLength; i++) {
@@ -91,7 +129,7 @@ async function pull (options) {
             });
 
             // read written hash and save to ref
-            gitHash = (await writer.captureOutput()).trim();
+            gitHash = await writer.captureOutputTrimmed();
 
             // write mapping of emergence raw SHA1 hash to git hash
             await git.updateRef(blobRef, gitHash);
@@ -103,28 +141,21 @@ async function pull (options) {
     }
 
 
+    // write tree to object store
+    logger.info('Writing tree...');
+
     const rootTreeHash = await git.TreeObject.write(rootTree, git);
 
-    console.log(rootTreeHash);
-
-    // TreeNode.isPrototypeOf(tree['site-root']) // true
-    // TreeNode.isPrototypeOf(tree['site-root']['alerts.php']) // false
 
 
-    // build manifest
-    // const manifestWriter = await git.hashObject({  w: true, stdin: true, $spawn: true });
+    // save mapping of manifest to tree hash and return
+    await git.updateRef(manifestRef, rootTreeHash);
 
-    // for (const treePath of treePaths) {
-    //     manifestWriter.stdin.write(treeFiles[treePath].SHA1 + ' ' + treePath + '\n');
-    // }
+    return rootTreeHash;
+};
 
-    // manifestWriter.stdin.end();
 
-    // const manifestHash = (await manifestWriter.captureOutput()).trim();
 
     // TODO: diff manifest against last manifest and filter identical lines
 
     // download all files to git // TODO: allow X to run in parallel if hash-object is cool with that?
-
-
-};
