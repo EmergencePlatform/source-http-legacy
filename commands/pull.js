@@ -29,8 +29,7 @@ exports.handler = async argv => {
 
 
 
-async function pull(options) {
-    const path = require('path');
+async function pull (options) {
     const hostApi = await require('../lib/host.js').getApi(options);
     const git = await require('git-client').requireVersion('>=2.7.4');
 
