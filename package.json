@@ -1,5 +1,5 @@
 {
-  "name": "emergence-source-http-legacy",
+  "name": "@emergence/source-http-legacy",
   "version": "0.9.0",
   "description": "Emergence source driver for pulling file trees via Emergence sites' legacy HTTP interface",
   "main": "index.js",
