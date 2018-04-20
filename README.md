@@ -20,4 +20,5 @@ Visit the [discussion topic on the emergence forum](http://forum.emr.ge/t/pull-a
 ## Roadmap
 
 - [ ] Add `--update-ref=` and `--update-branch` options to `pull` command to automatically generate commits with parents
+- [ ] Discover and transparently utilize remote `/.git` interface if available
 - [ ] Evaluate feasibility of exposing a [git remote helper](https://git-scm.com/docs/git-remote-helpers)
