@@ -16,3 +16,8 @@ See `emergence-source-http-legacy --help` output for complete options
 ## Help and Support
 
 Visit the [discussion topic on the emergence forum](http://forum.emr.ge/t/pull-any-site-into-a-git-repo/111)
+
+## Roadmap
+
+- [ ] Add `--update-ref=` and `--update-branch` options to `pull` command to automatically generate commits with parents
+- [ ] Evaluate feasibility of exposing a [git remote helper](https://git-scm.com/docs/git-remote-helpers)
