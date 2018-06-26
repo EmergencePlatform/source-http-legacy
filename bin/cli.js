@@ -12,6 +12,7 @@ if (process.env.DEBUG) {
 
 // route command line
 require('yargs')
+    .version(require('../package.json').version)
     .option('d', {
         alias: 'debug',
         default: false,
