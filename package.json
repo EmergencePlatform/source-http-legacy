@@ -1,6 +1,6 @@
 {
   "name": "@emergence/source-http-legacy",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Emergence source driver for pulling file trees via Emergence sites' legacy HTTP interface",
   "repository": "https://github.com/EmergencePlatform/source-http-legacy",
   "main": "bin/cli.js",
